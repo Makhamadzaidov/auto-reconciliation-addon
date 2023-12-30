@@ -242,27 +242,3 @@ namespace AutoReconcilationAddon
 		}
 	}
 }
-
-
-/*if (pVal.FormTypeEx == "UDO_FT_AutoReconcilation" && pVal.BeforeAction == false
-				&& pVal.EventType == SAPbouiCOM.BoEventTypes.et_FORM_VISIBLE)
-{
-
-	*//*SAPbouiCOM.Form oForm = Application.SBO_Application.Forms.Item(FormUID);
-
-	if (oForm != null)
-	{
-		foreach (SAPbouiCOM.Item item in oForm.Items)
-		{
-			Console.WriteLine($"Item UID: {item.UniqueID}, Item Type: {item.Type}, Item name: {item.Description}");
-		}
-	}*//*
-
-	SAPbouiCOM.Form oForm = Application.SBO_Application.Forms.Item(FormUID);
-
-	string docEntryItemUID = "0_U_S";
-
-	SAPbouiCOM.Item docEntry = oForm.Items.Item(docEntryItemUID);
-
-	docEntry.Enabled = false;
-}*/
