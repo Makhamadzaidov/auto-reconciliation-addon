@@ -55,7 +55,8 @@ namespace AutoReconcilationAddon
 		{
 			BubbleEvent = true;
 
-			if (pVal.FormTypeEx == "UDO_FT_AutoReconcilation" && pVal.BeforeAction == false && pVal.EventType == SAPbouiCOM.BoEventTypes.et_FORM_LOAD)
+			if (pVal.FormTypeEx == "UDO_FT_AutoReconcilation" && pVal.BeforeAction == false &&
+				pVal.EventType == SAPbouiCOM.BoEventTypes.et_FORM_LOAD)
 			{
 				SAPbouiCOM.Form oForm = Application.SBO_Application.Forms.Item(FormUID);
 
@@ -71,16 +72,15 @@ namespace AutoReconcilationAddon
 				oButtonItem.Height = 20;
 				oButtonItem.AffectsFormMode = false;
 
-				SAPbouiCOM.Item oEditTextItem = oForm.Items.Add("resulted", SAPbouiCOM.BoFormItemTypes.it_EDIT);
+				SAPbouiCOM.Item oEditTextItem = oForm.Items.Add("resulted", SAPbouiCOM.BoFormItemTypes.it_EXTEDIT);
 				oEditTextItem.Left = 10;
 				oEditTextItem.Top = 60;
-				oEditTextItem.Width = 550;
+				oEditTextItem.Width = 400;
 				oEditTextItem.Height = 300;
+				oEditTextItem.Enabled = false;
 
 				oResultEdittext = (SAPbouiCOM.EditText)oEditTextItem.Specific;
-
-				oForm.Mode = SAPbouiCOM.BoFormMode.fm_OK_MODE;
-				oForm.AutoManaged = true;
+				oResultEdittext.ScrollBars = SAPbouiCOM.BoScrollBars.sb_Vertical;
 			}
 
 
@@ -139,43 +139,40 @@ namespace AutoReconcilationAddon
 					catch (Exception ex)
 					{
 						Console.WriteLine(ex.Message);
+						Application.SBO_Application.StatusBar.SetSystemMessage($"Ошибка при выверке для [{bpCode}] {ex.Message}",
+							SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
 					}
 				}
 
 				else if (!string.IsNullOrEmpty(groupsCombo) && !string.IsNullOrEmpty(fromDate) && !string.IsNullOrEmpty(toDate))
 				{
-					Console.WriteLine("Addon is working");
-
 					Application.SBO_Application.StatusBar.SetSystemMessage("Аддон начал выверку. Пожалуйста подожите...",
 						SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
 
-					oRS.DoQuery($"SELECT \"CardCode\" FROM OCRD WHERE \"CardType\" = '{groupsCombo}'");
+					oRS.DoQuery($"SELECT \"CardCode\", \"CardName\" FROM OCRD WHERE \"CardType\" = '{groupsCombo}'");
 
 					List<Partner> list = new List<Partner>();
 					for (int i = 0; i < oRS.RecordCount; i++)
 					{
 						var bpcode = oRS.Fields.Item("CardCode").Value.ToString();
+						var bpName = oRS.Fields.Item("CardName").Value.ToString();
 
-						Partner partner = new Partner() { CardCode = bpcode };
+						Partner partner = new Partner() { CardCode = bpcode, CardName = bpName };
 						list.Add(partner);
-
 						oRS.MoveNext();
 					}
 
-					foreach (var item in list)
-					{
-						Console.WriteLine(item.CardCode);
-					}
-
 					bool flag = false;
-					oResultEdittext.Value = "";
 
 					foreach (var bomboRow in list)
 					{
 						oBP.GetByKey(bomboRow.CardCode);
+
 						string cardCode = bomboRow.CardCode;
+						string cardName = bomboRow.CardName;
 						string linkedBusinessPartner = oBP.LinkedBusinessPartner;
 						string xml = "";
+
 						transactionService.ClearTransactions();
 
 						try
@@ -197,17 +194,18 @@ namespace AutoReconcilationAddon
 							Dictionary<(int, int), double> reconciliatedTransactions = transactionService.GetReconciliatedTransactions();
 							reconciliationService.Reconciliate(openTransactions, reconciliatedTransactions);
 
-							string str = oResultEdittext.Value;
-							oResultEdittext.Value = "Выверка для [" + cardCode + "] успешно завершена." + Environment.NewLine + str + Environment.NewLine;
+							if (oResultEdittext != null)
+								oResultEdittext.String += Environment.NewLine + $"Выверка для [{cardCode} - {cardName}] успешно завершена.";
 						}
 						catch (Exception ex)
 						{
 							flag = true;
-							string str = oResultEdittext.Value;
-							oResultEdittext.Value = string.Format("Ошибка при выверке для [{0}]: {1}\r\n", (object)bomboRow.CardCode, (object)ex) + str;
+							if (oResultEdittext != null)
+								oResultEdittext.String += Environment.NewLine + $"Ошибка при выверке для [{cardCode}-{cardName}]";
 							reportService.ReportError(cardCode, linkedBusinessPartner, ex, xml);
 						}
 					}
+
 					if (!flag)
 						Application.SBO_Application.StatusBar.SetText("Автоматическая выверка успешно завершена.", Type: SAPbouiCOM.BoStatusBarMessageType.smt_Success);
 					else

@@ -12,7 +12,8 @@ namespace AutoReconcilationAddon.Services
 		public ReconciliationService(SAPbobsCOM.Company oCom)
 		{
 			this.oCom = oCom;
-			this.service = (InternalReconciliationsService)this.oCom.GetCompanyService().GetBusinessService(ServiceTypes.InternalReconciliationsService);
+			this.service = (InternalReconciliationsService)this.oCom.GetCompanyService()
+				.GetBusinessService(ServiceTypes.InternalReconciliationsService);
 		}
 
 		public InternalReconciliationsService GetService() => this.service;
@@ -28,7 +29,8 @@ namespace AutoReconcilationAddon.Services
 		  string dateFrom,
 		  string dateTo)
 		{
-			InternalReconciliationOpenTransParams dataInterface = (InternalReconciliationOpenTransParams)this.service.GetDataInterface(InternalReconciliationsServiceDataInterfaces.irsInternalReconciliationOpenTransParams);
+			InternalReconciliationOpenTransParams dataInterface = (InternalReconciliationOpenTransParams)
+				this.service.GetDataInterface(InternalReconciliationsServiceDataInterfaces.irsInternalReconciliationOpenTransParams);
 			dataInterface.ReconDate = DateTime.Today;
 			dataInterface.DateType = ReconSelectDateTypeEnum.rsdtPostDate;
 			dataInterface.FromDate = DateTime.ParseExact(dateFrom, "yyyyMMdd", (IFormatProvider)null);
@@ -45,7 +47,8 @@ namespace AutoReconcilationAddon.Services
 		  string dateFrom,
 		  string dateTo)
 		{
-			InternalReconciliationOpenTransParams dataInterface = (InternalReconciliationOpenTransParams)this.service.GetDataInterface(InternalReconciliationsServiceDataInterfaces.irsInternalReconciliationOpenTransParams);
+			InternalReconciliationOpenTransParams dataInterface = (InternalReconciliationOpenTransParams)
+				this.service.GetDataInterface(InternalReconciliationsServiceDataInterfaces.irsInternalReconciliationOpenTransParams);
 			dataInterface.ReconDate = DateTime.Today;
 			dataInterface.DateType = ReconSelectDateTypeEnum.rsdtPostDate;
 			dataInterface.FromDate = DateTime.ParseExact(dateFrom, "yyyyMMdd", (IFormatProvider)null);
@@ -63,7 +66,8 @@ namespace AutoReconcilationAddon.Services
 		  Dictionary<(int, int), double> reconciliatedTransactions)
 		{
 			bool flag = false;
-			foreach (InternalReconciliationOpenTransRow reconciliationOpenTransRow in (IInternalReconciliationOpenTransRows)openTransactions.InternalReconciliationOpenTransRows)
+			foreach (InternalReconciliationOpenTransRow reconciliationOpenTransRow in (IInternalReconciliationOpenTransRows)
+				openTransactions.InternalReconciliationOpenTransRows)
 			{
 				(int, int) key = (reconciliationOpenTransRow.TransId, reconciliationOpenTransRow.TransRowId);
 				if (reconciliatedTransactions.ContainsKey(key))
